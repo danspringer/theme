@@ -63,13 +63,19 @@ class theme_assets
         return $this;
     }
 
-    public function setCss(string $key, string $data, string $media = 'all', array $attributes = []): theme_assets
+    public function setCss(string $key, string $data, string $media = '', array $attributes = [], bool $noscript = false): theme_assets
     {
-        $attributes['media'] = $media;
+        // If the media attribute is not set, do not default to 'all', because it is considered render-blocking
+        // Even an empty media="" can be render-blocking, so we only set it if a media type is given
+        // https://developer.chrome.com/docs/lighthouse/performance/render-blocking-resources?hl=de
+        if($media !== '') {
+            $attributes['media'] = $media;
+        }
 
         $this->css[$key] = [
             'data' => $data,
             'attributes' => $attributes,
+            'noscript' => $noscript,
         ];
 
         return $this;
@@ -163,7 +169,7 @@ class theme_assets
 
         if (!$return) {
             foreach ($this->css as $css_key => $css) {
-                $return .= $this->getLinkTag($this->id.'--'.$css_key, $css['data'], $css['attributes'], $this->cache_buster);
+                $return .= $this->getLinkTag($this->id.'--'.$css_key, $css['data'], $css['attributes'], $this->cache_buster, $css['noscript'] ?? false);
             }
         }
 
