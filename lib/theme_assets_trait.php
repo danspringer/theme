@@ -38,18 +38,22 @@ trait theme_assets_trait
      *
      * @return string
      */
-    private function getLinkTag(string $key, string $file, array $attributes, string $cache_buster = ''): string
+    private function getLinkTag(string $key, string $file, array $attributes, string $cache_buster = '', bool $noscript = false): string
     {
         if ($this->isAdmin()) {
             $attributes['data-key'] = 'style--'.$key;
         }
-
+        $noscript_tag = $noscript ? '<noscript><link rel="stylesheet" href="'.$this->stripDots($file).$this->getCacheBuster($file, $cache_buster).'"></noscript>' : '';
+        $onload = '';
+        if($noscript) {
+            $onload = ' onload="this.onload=null;this.rel=\'stylesheet\'"'; // rex_string::buildAttributes() bypass wegen Sanitizer der Hochkommata
+        }
         $attributes['href'] = $this->stripDots($file).$this->getCacheBuster($file, $cache_buster);
 
         $attributes['rel'] = $attributes['rel'] ?? 'stylesheet';
         $attributes['type'] = $attributes['type'] ?? 'text/css';
 
-        return '<link'.rex_string::buildAttributes($attributes).' />'.PHP_EOL;
+        return '<link'.rex_string::buildAttributes($attributes).$onload.' />'.$noscript_tag.PHP_EOL;
     }
 
     /**
